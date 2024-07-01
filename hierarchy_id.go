@@ -10,15 +10,33 @@ type HierarchyId = []int
 // Parse takes a byte slice of data stored in SQL Server hierarchyid format and returns a HierarchyId.
 //
 // SQL server uses a custom binary format for hierarchyid.
-func Parse(data []byte) ([]int, error) {
+func Parse(data []byte) (HierarchyId, error) {
 	var levels []int = make([]int, 0)
 	if len(data) == 0 {
 		return levels, nil
 	}
 
+	println(BinaryString(data))
 	// TODO <ADD CODE HERE>
 
 	return levels, nil
+}
+
+// Receives a byte array and prints as binary (0 and 1) data.
+func BinaryString(data []byte) string {
+	var str = ""
+
+	for _, b := range data {
+		for i := 7; i >= 0; i-- {
+			if b&(1<<uint(i)) != 0 {
+				str += "1"
+			} else {
+				str += "0"
+			}
+		}
+	}
+
+	return str
 }
 
 // Create a string representation of the hierarchyid data type
