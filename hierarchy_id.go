@@ -1,6 +1,10 @@
 package main
 
-import "strconv"
+import (
+	"errors"
+	"fmt"
+	"strconv"
+)
 
 // HierarchyId is a type to represent a hierarchyid data type from SQL Server
 //
@@ -16,10 +20,105 @@ func Parse(data []byte) (HierarchyId, error) {
 		return levels, nil
 	}
 
-	println(BinaryString(data))
+	var bin = BinaryString(data)
+	var values = []int{}
+
+	for true {
+		// Find pattern that fits  the binary data
+		var pattern, err = TestPatterns(bin)
+		if err != nil {
+			break
+		}
+
+		// fmt.Println(bin, pattern)
+
+		var value int64
+		value, err = Decode(pattern, bin)
+		if err != nil {
+			return nil, err
+		}
+
+		fmt.Println(bin, pattern, value)
+
+		// Add value to the list of values
+		values = append(values, int(value))
+
+		// Remove data from binary string
+		bin = bin[0 : len(bin)-len(pattern)]
+	}
+
 	// TODO <ADD CODE HERE>
 
 	return levels, nil
+}
+
+// Decode a string representation of the hierarchyid data type for a pattern
+func Decode(pattern string, bin string) (int64, error) {
+	var binValue string = ""
+
+	for i := 0; i < len(pattern); i++ {
+		var pChar = pattern[len(pattern)-i-1]
+
+		if pChar == 'x' {
+			binValue += string(bin[len(bin)-i-1])
+		}
+	}
+
+	print(binValue)
+
+	value, err := strconv.ParseInt(binValue, 2, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return value, nil
+}
+
+// Test pattern for binary data
+//
+// Return the pattern that fits the binary data (if any), the length of the pattern and an error.
+func TestPatterns(bin string) (string, error) {
+	if len(bin) == 0 {
+		return "", errors.New("Binary string is empty")
+	}
+
+	// Check wich pattern fits the start of the binary string (if any)
+	for i := 0; i < len(Patterns); i++ {
+		var pattern = Patterns[i].Pattern
+
+		// Match each character of the pattern with the binary string
+		var patternMatch = false
+
+		for j := 0; j < len(pattern); j++ {
+			// Pattern is longer than the binary string
+			var bIndex = len(bin) - j - 1
+			if bIndex < 0 {
+				break
+			}
+
+			// Get the pattern and binary characters
+			var pChar = pattern[len(pattern)-j-1]
+			var bChar = bin[bIndex]
+
+			// If the pattern character is a terminator, stop the comparison (pattern has fully matched)
+			if pChar == 'T' {
+				patternMatch = true
+				break
+			}
+
+			// If the pattern character is not a fixed value and the binary character is different, the pattern does not match
+			if pChar != 'x' && pChar != bChar {
+				patternMatch = false
+				break
+			}
+		}
+
+		if patternMatch {
+			return pattern, nil
+		}
+	}
+
+	return "", nil
 }
 
 // Receives a byte array and prints as binary (0 and 1) data.
