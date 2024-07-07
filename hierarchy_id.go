@@ -15,15 +15,16 @@ type HierarchyId = []int
 //
 // SQL server uses a custom binary format for hierarchyid.
 func Parse(data []byte) (HierarchyId, error) {
-	var levels []int = make([]int, 0)
+	var levels []int = []int{}
 	if len(data) == 0 {
 		return levels, nil
 	}
 
 	var bin = BinaryString(data)
-	var values = []int{}
 
-	for true {
+	// fmt.Println(bin)
+
+	for {
 		// Find pattern that fits  the binary data
 		var pattern, err = TestPatterns(bin)
 		if err != nil {
@@ -38,12 +39,12 @@ func Parse(data []byte) (HierarchyId, error) {
 			return nil, err
 		}
 
-		fmt.Println(bin, pattern, value)
+		fmt.Println(data, bin, pattern, value)
 
 		// Add value to the list of values
-		values = append(values, int(value))
+		levels = append(levels, int(value))
 
-		// Remove data from binary string
+		// Remove already read data from binary string
 		bin = bin[0 : len(bin)-len(pattern)]
 	}
 
@@ -125,6 +126,7 @@ func TestPatterns(bin string) (string, error) {
 func BinaryString(data []byte) string {
 	var str = ""
 
+	// Convert each byte to binary
 	for _, b := range data {
 		for i := 7; i >= 0; i-- {
 			if b&(1<<uint(i)) != 0 {
@@ -134,6 +136,15 @@ func BinaryString(data []byte) string {
 			}
 		}
 	}
+
+	// Remove all trailing zeros
+	// for i := len(str) - 1; i >= 0; i-- {
+	// 	if str[i] == '0' {
+	// 		str = str[0:i]
+	// 	} else {
+	// 		break
+	// 	}
+	// }
 
 	return str
 }
