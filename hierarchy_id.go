@@ -138,13 +138,13 @@ func BinaryString(data []byte) string {
 	}
 
 	// Remove all trailing zeros
-	// for i := len(str) - 1; i >= 0; i-- {
-	// 	if str[i] == '0' {
-	// 		str = str[0:i]
-	// 	} else {
-	// 		break
-	// 	}
-	// }
+	for i := len(str) - 1; i >= 0; i-- {
+		if str[i] == '0' {
+			str = str[0:i]
+		} else {
+			break
+		}
+	}
 
 	return str
 }
