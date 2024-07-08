@@ -90,13 +90,13 @@ func TestPatterns(bin string) (string, error) {
 
 		for j := 0; j < len(pattern); j++ {
 			// Pattern is longer than the binary string
-			var bIndex = len(bin) - j - 1
-			if bIndex < 0 {
+			var bIndex = j
+			if bIndex >= len(bin) {
 				break
 			}
 
 			// Get the pattern and binary characters
-			var pChar = pattern[len(pattern)-j-1]
+			var pChar = pattern[j]
 			var bChar = bin[bIndex]
 
 			// If the pattern character is a terminator, stop the comparison (pattern has fully matched)

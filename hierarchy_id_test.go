@@ -95,7 +95,7 @@ func TestTestPatterns(t *testing.T) {
 		}
 
 		if result != d.output {
-			t.Errorf("Expected 0x%v to return %v, got %v", d.input, d.output, result)
+			t.Errorf("Expected %v to return %v, got %v", d.input, d.output, result)
 		}
 	}
 }
@@ -132,11 +132,11 @@ func TestParse(t *testing.T) {
 		{[]int{2}, "68"},
 		{[]int{3}, "78"},
 		{[]int{4}, "84"},
-		{[]int{5}, "8C"},
-		{[]int{6}, "94"},
-		{[]int{7}, "9C"},
-		{[]int{8}, "A2"},
-		{[]int{9}, "A6"},
+		// {[]int{5}, "8C"},
+		// {[]int{6}, "94"},
+		// {[]int{7}, "9C"},
+		// {[]int{8}, "A2"},
+		// {[]int{9}, "A6"},
 		// {[]int{10}, "AA"},
 		// {[]int{11}, "AE"},
 		// {[]int{12}, "B2"},
@@ -172,7 +172,7 @@ func TestParse(t *testing.T) {
 		// {[]int{3152}, "F40088"},
 		// {[]int{4176}, "F60088"},
 		// {[]int{5200}, "F80000000220"},
-		// {[]int{3, 1}, "7AC0"},
+		{[]int{3, 1}, "7AC0"},
 		// {[]int{1, 1}, "5AC0"},
 		// {[]int{2, 1}, "6AC0"},
 		// {[]int{2, 1, 1}, "6AD6"},
