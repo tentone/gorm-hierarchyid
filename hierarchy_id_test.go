@@ -75,6 +75,31 @@ func TestBinaryString(t *testing.T) {
 
 }
 
+func TestTestPatterns(t *testing.T) {
+	type TestData struct {
+		input  string
+		output string
+	}
+
+	var data []TestData = []TestData{
+		{"01001", "01xxT"},
+		{"01010", "01xxT"},
+		{"100001", "100xxT"},
+		{"001110101", "00111xxxT"},
+	}
+
+	for _, d := range data {
+		result, err := TestPatterns(d.input)
+		if err != nil {
+			t.Errorf("Error testing %v: %v", d.input, err)
+		}
+
+		if result != d.output {
+			t.Errorf("Expected 0x%v to return %v, got %v", d.input, d.output, result)
+		}
+	}
+}
+
 func TestParse(t *testing.T) {
 	type TestData struct {
 		output []int
@@ -82,7 +107,7 @@ func TestParse(t *testing.T) {
 	}
 
 	var data []TestData = []TestData{
-		// {nil, ""},
+		{nil, ""},
 		// {[]int{-73}, "1BEEFC"},
 		// {[]int{-72}, "2088"},
 		// {[]int{-64}, "2188"},
