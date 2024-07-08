@@ -2,11 +2,7 @@
 
 ### Original texto from [Adam Milazzo](http://www.adammil.net/blog/v100_how_the_SQL_Server_hierarchyid_data_type_works_kind_of_.html)
 
-A hierarchyid is very compact, capable of storing a position within a tree containing 100,000 nodes with a branching factor of
-6 in less than 39 bits on average. Interestingly, it supports arbitrary insertions and deletions without ever needing to update
-any rows (besides the one being inserted/deleted). This means you can always generate a new hierarchyid before or after any other
-ID, or between any two sibling IDs. Hierarchyids are designed so that sorting a set of hierarchyids puts them in the order that
-they would be visited on a depth-first traversal of the tree, which is the usual approach.
+A hierarchyid is very compact, capable of storing a position within a tree containing 100,000 nodes with a branching factor of 6 in less than 39 bits on average. Interestingly, it supports arbitrary insertions and deletions without ever needing to update any rows (besides the one being inserted/deleted). This means you can always generate a new hierarchyid before or after any other ID, or between any two sibling IDs. Hierarchyids are designed so that sorting a set of hierarchyids puts them in the order that they would be visited on a depth-first traversal of the tree, which is the usual approach.
 
 Hierarchyids are represented in text with the following scheme:
 
@@ -18,9 +14,7 @@ Hierarchyids are represented in text with the following scheme:
  - /1.-5.3/ lies between /1.-5.2/ and /1.-5.4/. It's also between /1.-5/ and /1.-4/, /1/ and /2/, etc.
 
 
-I'll assume that you're familiar with bits and bytes. A hierarchyid is a bit string which is left-packed into bytes to allow
-them to be compared directly (i.e. by comparing byte values). Trailing zeros are not part of the ID. If you look at the binary
-values corresponding to hierarchyids, you'll notice some patterns. (Note that the hex values often do not match the bit strings. This is because the hex values represent the actual bytes stored, while the bit strings have had trailing zeros removed.)
+I'll assume that you're familiar with bits and bytes. A hierarchyid is a bit string which is left-packed into bytes to allow them to be compared directly (i.e. by comparing byte values). Trailing zeros are not part of the ID. If you look at the binary values corresponding to hierarchyids, you'll notice some patterns. (Note that the hex values often do not match the bit strings. This is because the hex values represent the actual bytes stored, while the bit strings have had trailing zeros removed.)
 
 <table>
  <tbody><tr>
@@ -238,37 +232,15 @@ In particular, within certain ranges there are bits that increment in the usual 
  </tr>
 </tbody></table>
 
-The values for /0/ through /15/ are straightforward enough, but when we get to /16/, something strange happens. The bits that increment appear
-to get broken up. When you look at further ranges, you see other apparent
-breakups, where bits are grouped and separated by zeros. But the bits increment
-normally, with carry between groups. What is going on here?
+The values for /0/ through /15/ are straightforward enough, but when we get to /16/, something strange happens. The bits that increment appear to get broken up. When you look at further ranges, you see other apparent breakups, where bits are grouped and separated by zeros. But the bits increment normally, with carry between groups. What is going on here?
 
-First of all, as you can see, a varying number of bits are
-used to encode the numbers. This is useful, as many trees are simply binary
-trees, and those that aren't typically have small branching factors. But then
-it needs a way to know how many bits are in a particular number. It seems that
-hierarchyids use a prefix-free code at the beginning of each number to
-distinguish them: 01..., 100…, 101…, 110…, 1110…, 11110…, etc. So it knows that
-when it sees a 01 or 100, then it needs to read three more bits, and when it
-sees 101, it needs to read 4 more bits, etc.
+First of all, as you can see, a varying number of bits are used to encode the numbers. This is useful, as many trees are simply binary trees, and those that aren't typically have small branching factors. But then it needs a way to know how many bits are in a particular number. It seems that hierarchyids use a prefix-free code at the beginning of each number to distinguish them: 01..., 100…, 101…, 110…, 1110…, 11110…, etc. So it knows that when it sees a 01 or 100, then it needs to read three more bits, and when it sees 101, it needs to read 4 more bits, etc.
 
-Second, given that the endings in the broken-up patterns
-seem to be the same (always 0y1xxx1), I suspect that perhaps values are
-computed in multiple stages. First, the value of 1xxx1 is computed. This is
-added to 8y, and then the result is added to 16z (if it exists), which is added
-to 128a or 64a (if it exists), etc. Finally, the result is added to a constant
-which marks the beginning of its range (01xx1 starts at 0, 100xx1 at 4, etc).
-So perhaps the numbers can be broken down this way: prefix (n+0)* y1xxx1. That
-is, a prefix followed a number (possibly zero) of groups, each of which
-contains some bits followed by a zero, and ending with y1xxx1.
+Second, given that the endings in the broken-up patterns seem to be the same (always 0y1xxx1), I suspect that perhaps values are computed in multiple stages. First, the value of 1xxx1 is computed. This is added to 8y, and then the result is added to 16z (if it exists), which is added to 128a or 64a (if it exists), etc. Finally, the result is added to a constant which marks the beginning of its range (01xx1 starts at 0, 100xx1 at 4, etc). So perhaps the numbers can be broken down this way: prefix (n+0)* y1xxx1. That is, a prefix followed a number (possibly zero) of groups, each of which contains some bits followed by a zero, and ending with y1xxx1.
 
-What I don't understand is why the numbers have such a
-strange pattern. Why not simply use 01xx1, 100xx1, 101xxx1, 1110xxxxxxxxxxxxx1,
-etc? Why separate the groups with zeros? It seems like a waste of space, but I
-assume there's a good reason. There's at least a good reason for the 1 bit at
-the end, which I'll get to later.
+What I don't understand is why the numbers have such a strange pattern. Why not simply use `01xx1`, `100xx1`, `101xxx1`, `1110xxxxxxxxxxxxx1`, etc? Why separate the groups with zeros? It seems like a waste of space, but I assume there's a good reason. There's at least a good reason for the 1 bit at the end, which I'll get to later.
 
-Let's consider negative numbers. Normally, numbers on computers are represented in <a href="http://en.wikipedia.org/wiki/Two%27s_complement">two's complement</a>. But in two's complement, negative numbers are greater than positive numbers when you consider their bit strings. That is, the unsigned value of a negative integer is greater than the unsigned value of a positive integer. But hierarchyids need negative numbers to have bit string values less than those of positive numbers. One way to do this is to use a number representation where 0 is represented as a 1 followed by zeros. For instance, with four bits, 0 is represented as 1000. 1 through 7 are 1001 through 1111, and crucially, -1 is 0111, -2 is 0110, etc. Let's look at some more bits.
+Let's consider negative numbers. Normally, numbers on computers are represented in [two's complement](http://en.wikipedia.org/wiki/Two%27s_complement). But in two's complement, negative numbers are greater than positive numbers when you consider their bit strings. That is, the unsigned value of a negative integer is greater than the unsigned value of a positive integer. But hierarchyids need negative numbers to have bit string values less than those of positive numbers. One way to do this is to use a number representation where 0 is represented as a 1 followed by zeros. For instance, with four bits, 0 is represented as 1000. 1 through 7 are 1001 through 1111, and crucially, -1 is 0111, -2 is 0110, etc. Let's look at some more bits.
 
 <table>
  <tbody><tr>
@@ -398,7 +370,11 @@ It doesn't really use the scheme I expected. You can see that the prefixes conti
  </tr>
 </tbody></table>
 
-The parent/child relationship is represented by simple concatenation. /0/ is 01001 and so /0/0/ is 01001 01001. This makes sense. Next, look at the dot patterns. At first, it seems that the last number in a dotted sequence is in its normal form, and the previous numbers are their normal forms plus one. This is quite clever. Since all the normal forms end in 1, adding one yields a string ending in zero. Given that /0/ is 01001, /0.X/ is 01010 X, and /1/ is 01011, you can see that all IDs /0/*/ will be less than all IDs /0.X/*/, which are themselves less than /1/.  Things get complicated when we get to /3.0/, however. /3/ is 01111, and adding one would normally produce 10000, but it instead produces 1.  I believe this is to handle the following scenario. Consider /3.4/. If the 3. did produce 10000, then the result would be 10000100001. This would be greater than /4/, which is 100001, but it's supposed to be less. Let's look at another case. /15/ is 101111, but /15.0/ produces 110000010000 01001. This time it isn't simply a case of tacking on another zero. However, /16/ is 110000010001, so I think we can reformulate the /X.Y/ rule as “output /X+1/ minus one, and then output /Y/”. So for /3.0/, we take /3+1/ (i.e. /4/), which is 100001, and subtract one to get 100000.  This works for all the cases we've seen so far.  Now we have enough information to parse and generate hierarchyids and combine them, using parent/child and sibling relationships, assuming we know the pattern for each prefix code, and those can be discovered empirically. Still unsolved is the mystery of why the patterns are so strange, and in particular, why there are seemingly  constant zeros embedded within them. To see if we can figure it out, let's try removing them and seeing if we run into trouble. We'll design our own scheme, with the following patterns: 01xx1, 10xxxx1, and 110xxxxxxxx1. For negative numbers, we'll use the following: 001xx1, 0001xxx1, and 00001xxxxxxxxxx1. (These were chosen more to help detect problems than for efficient coding.)  <table>  <tbody><tr>   <td>/0/</td>   <td>01001</td>   <td>/0/</td>   <td>01001</td>   <td>/0.0/</td>   <td>01010 01001</td>  </tr>  <tr>   <td>/1/</td>   <td>01011</td>   <td>/-1/</td>   <td>001111</td>   <td>/1.0/</td>   <td>01100 01001</td>  </tr>  <tr>   <td>/2/</td>   <td>01101</td>   <td>/-2/</td>
+The parent/child relationship is represented by simple concatenation. /0/ is 01001 and so /0/0/ is 01001 01001. This makes sense. Next, look at the dot patterns. At first, it seems that the last number in a dotted sequence is in its normal form, and the previous numbers are their normal forms plus one. This is quite clever. Since all the normal forms end in 1, adding one yields a string ending in zero. Given that /0/ is 01001, /0.X/ is 01010 X, and /1/ is 01011, you can see that all IDs /0/*/ will be less than all IDs /0.X/*/, which are themselves less than /1/.  Things get complicated when we get to /3.0/, however. /3/ is 01111, and adding one would normally produce 10000, but it instead produces 1.  I believe this is to handle the following scenario. Consider /3.4/. If the 3. did produce 10000, then the result would be 10000100001. This would be greater than /4/, which is 100001, but it's supposed to be less. Let's look at another case. /15/ is 101111, but /15.0/ produces 110000010000 01001. This time it isn't simply a case of tacking on another zero. However, /16/ is 110000010001, so I think we can reformulate the /X.Y/ rule as “output /X+1/ minus one, and then output /Y/”. So for /3.0/, we take /3+1/ (i.e. /4/), which is 100001, and subtract one to get 100000.  This works for all the cases we've seen so far.  Now we have enough information to parse and generate hierarchyids and combine them, using parent/child and sibling relationships, assuming we know the pattern for each prefix code, and those can be discovered empirically. Still unsolved is the mystery of why the patterns are so strange, and in particular, why there are seemingly  constant zeros embedded within them. To see if we can figure it out, let's try removing them and seeing if we run into trouble. We'll design our own scheme, with the following patterns: 01xx1, 10xxxx1, and 110xxxxxxxx1. For negative numbers, we'll use the following: 001xx1, 0001xxx1, and 00001xxxxxxxxxx1. (These were chosen more to help detect problems than for efficient coding.)
+
+
+
+<table>  <tbody><tr>   <td>/0/</td>   <td>01001</td>   <td>/0/</td>   <td>01001</td>   <td>/0.0/</td>   <td>01010 01001</td>  </tr>  <tr>   <td>/1/</td>   <td>01011</td>   <td>/-1/</td>   <td>001111</td>   <td>/1.0/</td>   <td>01100 01001</td>  </tr>  <tr>   <td>/2/</td>   <td>01101</td>   <td>/-2/</td>
   <td>001101</td>
   <td>/2.0/</td>
   <td>01110 01001</td>
