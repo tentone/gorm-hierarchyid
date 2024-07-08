@@ -22,7 +22,7 @@ func Parse(data []byte) (HierarchyId, error) {
 
 	var bin = BinaryString(data)
 
-	// fmt.Println(bin)
+	fmt.Println(" - Trying to parse data ", bin)
 
 	for {
 		// Find pattern that fits  the binary data
@@ -31,41 +31,39 @@ func Parse(data []byte) (HierarchyId, error) {
 			break
 		}
 
-		// fmt.Println(bin, pattern)
+		fmt.Println("    - Found pattern ", pattern)
 
 		var value int64
-		value, err = Decode(pattern, bin)
+		value, err = DecodeValue(pattern, bin)
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println(data, bin, pattern, value)
+		fmt.Println("    - Decoded value ", value)
 
 		// Add value to the list of values
 		levels = append(levels, int(value))
 
 		// Remove already read data from binary string
 		bin = bin[0 : len(bin)-len(pattern)]
-	}
 
-	// TODO <ADD CODE HERE>
+		fmt.Println("    - Remaining data to analyse ", bin)
+	}
 
 	return levels, nil
 }
 
-// Decode a string representation of the hierarchyid data type for a pattern
-func Decode(pattern string, bin string) (int64, error) {
+// DecodeValue a string representation of the hierarchyid data type for a pattern
+func DecodeValue(pattern string, bin string) (int64, error) {
 	var binValue string = ""
 
 	for i := 0; i < len(pattern); i++ {
 		var pChar = pattern[len(pattern)-i-1]
 
 		if pChar == 'x' {
-			binValue += string(bin[len(bin)-i-1])
+			binValue = string(bin[len(bin)-i-1]) + binValue
 		}
 	}
-
-	print(binValue)
 
 	value, err := strconv.ParseInt(binValue, 2, 64)
 	if err != nil {
