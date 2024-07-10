@@ -34,7 +34,8 @@ func Parse(data []byte) (HierarchyId, error) {
 		fmt.Println("    - Found pattern ", pattern)
 
 		var value int64
-		value, err = DecodeValue(pattern, bin)
+		value, err = DecodeValue(pattern.Pattern, bin)
+		value += pattern.Min
 		if err != nil {
 			return nil, err
 		}
@@ -45,9 +46,14 @@ func Parse(data []byte) (HierarchyId, error) {
 		levels = append(levels, int(value))
 
 		// Remove already read data from binary string
-		bin = bin[0 : len(bin)-len(pattern)]
+		bin = bin[0 : len(bin)-len(pattern.Pattern)]
 
 		fmt.Println("    - Remaining data to analyse ", bin)
+	}
+
+	// Reverse list of levels
+	for i, j := 0, len(levels)-1; i < j; i, j = i+1, j-1 {
+		levels[i], levels[j] = levels[j], levels[i]
 	}
 
 	return levels, nil
@@ -76,9 +82,9 @@ func DecodeValue(pattern string, bin string) (int64, error) {
 // Test pattern for binary data
 //
 // Return the pattern that fits the binary data (if any), the length of the pattern and an error.
-func TestPatterns(bin string) (string, error) {
+func TestPatterns(bin string) (*HierarchyIdPattern, error) {
 	if len(bin) == 0 {
-		return "", errors.New("Binary string is empty")
+		return nil, errors.New("Binary string is empty")
 	}
 
 	// Check wich pattern fits the start of the binary string (if any)
@@ -113,11 +119,11 @@ func TestPatterns(bin string) (string, error) {
 		}
 
 		if patternMatch {
-			return pattern, nil
+			return &Patterns[i], nil
 		}
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 // Receives a byte array and prints as binary (0 and 1) data.
