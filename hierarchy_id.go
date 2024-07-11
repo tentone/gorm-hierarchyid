@@ -9,13 +9,13 @@ import (
 // HierarchyId is a type to represent a hierarchyid data type from SQL Server
 //
 // The hierarchyid data type is a series of integers separated by slashes.  For example, \1\2\3\.
-type HierarchyId = []int
+type HierarchyId = []int64
 
 // Parse takes a byte slice of data stored in SQL Server hierarchyid format and returns a HierarchyId.
 //
 // SQL server uses a custom binary format for hierarchyid.
 func Parse(data []byte) (HierarchyId, error) {
-	var levels []int = []int{}
+	var levels []int64 = []int64{}
 	if len(data) == 0 {
 		return levels, nil
 	}
@@ -43,7 +43,7 @@ func Parse(data []byte) (HierarchyId, error) {
 		fmt.Println("    - Decoded value ", value)
 
 		// Add value to the list of values
-		levels = append(levels, int(value))
+		levels = append(levels, value)
 
 		// Remove already read data from binary string
 		bin = bin[0 : len(bin)-len(pattern.Pattern)]
@@ -159,7 +159,7 @@ func BinaryString(data []byte) string {
 func ToString(data HierarchyId) string {
 	var result string = "/"
 	for _, level := range data {
-		result += strconv.Itoa(level) + "/"
+		result += strconv.FormatInt(level, 10) + "/"
 	}
 	return result
 }
