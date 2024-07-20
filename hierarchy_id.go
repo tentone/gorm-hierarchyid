@@ -92,7 +92,7 @@ func TestPatterns(bin string) (*HierarchyIdPattern, error) {
 	}
 
 	if len(bin) < 5 {
-		return nil, errors.New("Binary string is too short minimum length is 5")
+		return nil, errors.New("Binary string " + bin + " is too short minimum length is 5")
 	}
 
 	// Check which pattern fits the start of the binary string (if any)
