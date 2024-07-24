@@ -83,7 +83,7 @@ func TestTestPatterns(t *testing.T) {
 
 	var data []TestData = []TestData{
 		{"01001", "01xxT"},
-		{"01010", "01xxT"},
+		{"01011", "01xxT"},
 		{"100001", "100xxT"},
 		{"001110101", "00111xxxT"},
 	}

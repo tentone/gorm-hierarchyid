@@ -99,10 +99,14 @@ func TestPatterns(bin string) (*HierarchyIdPattern, error) {
 	for i := 0; i < len(Patterns); i++ {
 		var pattern = Patterns[i].Pattern
 
+		if len(pattern) > len(bin) {
+			continue
+		}
+
 		// Match each character of the pattern with the binary string
 		var patternMatch = false
-
 		for j := 0; j < len(pattern); j++ {
+
 			// Pattern is longer than the binary string
 			var bIndex = j
 			if bIndex >= len(bin) {
@@ -114,7 +118,7 @@ func TestPatterns(bin string) (*HierarchyIdPattern, error) {
 			var bChar = bin[bIndex]
 
 			// If the pattern character is a terminator, stop the comparison (pattern has fully matched)
-			if pChar == 'T' {
+			if pChar == 'T' && bChar == '1' {
 				patternMatch = true
 				break
 			}
