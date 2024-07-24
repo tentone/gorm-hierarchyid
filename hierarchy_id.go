@@ -6,6 +6,8 @@ import (
 	"strconv"
 )
 
+const debug = false
+
 // HierarchyId is a type to represent a hierarchyid data type from SQL Server
 //
 // The hierarchyid data type is a series of integers separated by slashes.  For example, \1\2\3\.
@@ -23,7 +25,9 @@ func Parse(data []byte) (HierarchyId, error) {
 	// Convert binary data to a string of 0s and 1s
 	var bin = BinaryString(data)
 
-	fmt.Println(" - Trying to parse data ", bin)
+	if debug {
+		fmt.Println(" - Trying to parse data ", bin)
+	}
 
 	for {
 		// Find pattern that fits  the binary data
@@ -32,7 +36,9 @@ func Parse(data []byte) (HierarchyId, error) {
 			return nil, err
 		}
 
-		fmt.Println("    - Found pattern ", pattern.Pattern, " for ", bin)
+		if debug {
+			fmt.Println("    - Found pattern ", pattern.Pattern, " for ", bin)
+		}
 
 		var value int64
 		value, err = DecodeValue(pattern.Pattern, bin)
@@ -41,23 +47,22 @@ func Parse(data []byte) (HierarchyId, error) {
 			return nil, err
 		}
 
-		fmt.Println("    - Decoded value ", value)
+		if debug {
+			fmt.Println("    - Decoded value ", value)
+		}
 
 		// Add value to the list of values
 		levels = append(levels, value)
 
 		// Remove already read data from binary string
-		bin = bin[0 : len(bin)-len(pattern.Pattern)]
+		bin = bin[len(pattern.Pattern):]
 		if bin == "" {
 			break
 		}
 
-		fmt.Println("    - Remaining data to analyse ", bin)
-	}
-
-	// Reverse list of levels
-	for i, j := 0, len(levels)-1; i < j; i, j = i+1, j-1 {
-		levels[i], levels[j] = levels[j], levels[i]
+		if debug {
+			fmt.Println("    - Remaining data to analyse ", bin)
+		}
 	}
 
 	return levels, nil
@@ -68,10 +73,9 @@ func DecodeValue(pattern string, bin string) (int64, error) {
 	var binValue string = ""
 
 	for i := 0; i < len(pattern); i++ {
-		var pChar = pattern[len(pattern)-i-1]
-
+		var pChar = pattern[i]
 		if pChar == 'x' {
-			binValue = string(bin[len(bin)-i-1]) + binValue
+			binValue += string(bin[i])
 		}
 	}
 
@@ -103,7 +107,9 @@ func TestPatterns(bin string) (*HierarchyIdPattern, error) {
 			continue
 		}
 
-		fmt.Println("   - Test pattern ", pattern, " with ", bin)
+		if debug {
+			fmt.Println("   - Test pattern ", pattern, " with ", bin)
+		}
 
 		// Match each character of the pattern with the binary string
 		var patternMatch = false
@@ -117,24 +123,31 @@ func TestPatterns(bin string) (*HierarchyIdPattern, error) {
 			var pChar = pattern[j]
 			var bChar = bin[j]
 
-			fmt.Println("      - Comparing ", string(pChar), " with ", string(bChar))
+			if debug {
+				fmt.Println("      - Comparing ", string(pChar), " with ", string(bChar))
+			}
 
 			// If the pattern character is a terminator, stop the comparison (pattern has fully matched)
 			if pChar == 'T' && bChar == '1' {
-				fmt.Println("      - Found match")
+				if debug {
+					fmt.Println("      - Found match")
+				}
 				patternMatch = true
 				break
 			}
 
 			// If the pattern character is not a fixed value and the binary character is different, the pattern does not match
 			if pChar != 'x' && pChar != bChar {
-				fmt.Println("         - Abort pattern match", string(pChar), " != ", string(bChar))
+				if debug {
+					fmt.Println("         - Abort pattern match", string(pChar), " != ", string(bChar))
+				}
 				patternMatch = false
 				break
 			}
 
-			fmt.Println("         - Chars match ", string(pChar), " == ", string(bChar))
-
+			if debug {
+				fmt.Println("         - Chars match ", string(pChar), " == ", string(bChar))
+			}
 		}
 
 		if patternMatch {
