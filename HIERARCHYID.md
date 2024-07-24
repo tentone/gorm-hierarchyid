@@ -1,6 +1,6 @@
 # HierarychyId
 
-### Original texto from [Adam Milazzo](http://www.adammil.net/blog/v100_how_the_SQL_Server_hierarchyid_data_type_works_kind_of_.html)
+### Original text from [Adam Milazzo](http://www.adammil.net/blog/v100_how_the_SQL_Server_hierarchyid_data_type_works_kind_of_.html)
 
 A hierarchyid is very compact, capable of storing a position within a tree containing 100,000 nodes with a branching factor of 6 in less than 39 bits on average. Interestingly, it supports arbitrary insertions and deletions without ever needing to update any rows (besides the one being inserted/deleted). This means you can always generate a new hierarchyid before or after any other ID, or between any two sibling IDs. Hierarchyids are designed so that sorting a set of hierarchyids puts them in the order that they would be visited on a depth-first traversal of the tree, which is the usual approach.
 

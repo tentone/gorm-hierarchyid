@@ -1,5 +1,9 @@
 # Gorm hierarchyid
- - Handle hierarchy ID type in SQL Server using Gorm
+ - Handle hierarchyid type in SQL Server and go.
+   - The hierarchyid data type is a variable length, system data type.
+   - Hierarchyid can represent a position in a hierarchy.
+ - Implements generation and parsing of hierarchyid type in go.
+ - Implements a type wrapper for usage with gorm.
 
 ## Resources
  - [adamil.net - How the SQL Server hierarchyid data type works (kind of)](http://www.adammil.net/blog/v100_how_the_SQL_Server_hierarchyid_data_type_works_kind_of_.html)
@@ -8,4 +12,4 @@
  - [Github](https://github.com/dotMorten/Microsoft.SqlServer.Types/pull/33) pull request Long type support
 
 ## License
- - MIT
+ - The project is distributed using a MIT license. Available on the project repository.
