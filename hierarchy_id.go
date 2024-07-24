@@ -32,7 +32,7 @@ func Parse(data []byte) (HierarchyId, error) {
 			return nil, err
 		}
 
-		fmt.Println("    - Found pattern ", pattern)
+		fmt.Println("    - Found pattern ", pattern.Pattern, " for ", bin)
 
 		var value int64
 		value, err = DecodeValue(pattern.Pattern, bin)
@@ -103,31 +103,38 @@ func TestPatterns(bin string) (*HierarchyIdPattern, error) {
 			continue
 		}
 
+		fmt.Println("   - Test pattern ", pattern, " with ", bin)
+
 		// Match each character of the pattern with the binary string
 		var patternMatch = false
 		for j := 0; j < len(pattern); j++ {
-
 			// Pattern is longer than the binary string
-			var bIndex = j
-			if bIndex >= len(bin) {
+			if j >= len(bin) {
 				break
 			}
 
 			// Get the pattern and binary characters
 			var pChar = pattern[j]
-			var bChar = bin[bIndex]
+			var bChar = bin[j]
+
+			fmt.Println("      - Comparing ", string(pChar), " with ", string(bChar))
 
 			// If the pattern character is a terminator, stop the comparison (pattern has fully matched)
 			if pChar == 'T' && bChar == '1' {
+				fmt.Println("      - Found match")
 				patternMatch = true
 				break
 			}
 
 			// If the pattern character is not a fixed value and the binary character is different, the pattern does not match
 			if pChar != 'x' && pChar != bChar {
+				fmt.Println("         - Abort pattern match", string(pChar), " != ", string(bChar))
 				patternMatch = false
 				break
 			}
+
+			fmt.Println("         - Chars match ", string(pChar), " == ", string(bChar))
+
 		}
 
 		if patternMatch {
