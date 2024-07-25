@@ -2,11 +2,8 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 )
-
-const debug = false
 
 // HierarchyId is a type to represent a hierarchyid data type from SQL Server
 //
@@ -25,19 +22,11 @@ func Parse(data []byte) (HierarchyId, error) {
 	// Convert binary data to a string of 0s and 1s
 	var bin = BinaryString(data)
 
-	if debug {
-		fmt.Println(" - Trying to parse data ", bin)
-	}
-
 	for {
 		// Find pattern that fits  the binary data
 		var pattern, err = TestPatterns(bin)
 		if err != nil {
 			return nil, err
-		}
-
-		if debug {
-			fmt.Println("    - Found pattern ", pattern.Pattern, " for ", bin)
 		}
 
 		var value int64
@@ -47,10 +36,6 @@ func Parse(data []byte) (HierarchyId, error) {
 			return nil, err
 		}
 
-		if debug {
-			fmt.Println("    - Decoded value ", value)
-		}
-
 		// Add value to the list of values
 		levels = append(levels, value)
 
@@ -58,10 +43,6 @@ func Parse(data []byte) (HierarchyId, error) {
 		bin = bin[len(pattern.Pattern):]
 		if bin == "" {
 			break
-		}
-
-		if debug {
-			fmt.Println("    - Remaining data to analyse ", bin)
 		}
 	}
 
@@ -107,10 +88,6 @@ func TestPatterns(bin string) (*HierarchyIdPattern, error) {
 			continue
 		}
 
-		if debug {
-			fmt.Println("   - Test pattern ", pattern, " with ", bin)
-		}
-
 		// Match each character of the pattern with the binary string
 		var patternMatch = false
 		for j := 0; j < len(pattern); j++ {
@@ -123,30 +100,16 @@ func TestPatterns(bin string) (*HierarchyIdPattern, error) {
 			var pChar = pattern[j]
 			var bChar = bin[j]
 
-			if debug {
-				fmt.Println("      - Comparing ", string(pChar), " with ", string(bChar))
-			}
-
 			// If the pattern character is a terminator, stop the comparison (pattern has fully matched)
 			if pChar == 'T' && bChar == '1' {
-				if debug {
-					fmt.Println("      - Found match")
-				}
 				patternMatch = true
 				break
 			}
 
 			// If the pattern character is not a fixed value and the binary character is different, the pattern does not match
 			if pChar != 'x' && pChar != bChar {
-				if debug {
-					fmt.Println("         - Abort pattern match", string(pChar), " != ", string(bChar))
-				}
 				patternMatch = false
 				break
-			}
-
-			if debug {
-				fmt.Println("         - Chars match ", string(pChar), " == ", string(bChar))
 			}
 		}
 
