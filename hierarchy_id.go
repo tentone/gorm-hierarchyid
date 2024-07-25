@@ -10,6 +10,32 @@ import (
 // The hierarchyid data type is a series of integers separated by slashes.  For example, \1\2\3\.
 type HierarchyId = []int64
 
+// Create a string representation of the hierarchyid data type
+//
+// The string representation is a series of integers separated by slashes.  For example, \1\2\3\
+func ToString(data HierarchyId) string {
+	var r string = "/"
+	for _, level := range data {
+		r += strconv.FormatInt(level, 10) + "/"
+	}
+	return r
+}
+
+// Compare two hierarchyid data types
+//
+// The comparison is done by comparing each level of the hierarchyid.  If the levels are the same, the next level is compared.  If the levels are different, the comparison stops and the result is returned.
+func Compare(a HierarchyId, b HierarchyId) int {
+	for i := 0; i < len(a) && i < len(b); i++ {
+		if a[i] < b[i] {
+			return -1
+		} else if a[i] > b[i] {
+			return 1
+		}
+	}
+
+	return 0
+}
+
 // Parse takes a byte slice of data stored in SQL Server hierarchyid format and returns a HierarchyId.
 //
 // SQL server uses a custom binary format for hierarchyid.
@@ -20,17 +46,17 @@ func Parse(data []byte) (HierarchyId, error) {
 	}
 
 	// Convert binary data to a string of 0s and 1s
-	var bin = BinaryString(data)
+	var bin = binaryString(data)
 
 	for {
 		// Find pattern that fits  the binary data
-		var pattern, err = TestPatterns(bin)
+		var pattern, err = testPatterns(bin)
 		if err != nil {
 			return nil, err
 		}
 
 		var value int64
-		value, err = DecodeValue(pattern.Pattern, bin)
+		value, err = decodeValue(pattern.Pattern, bin)
 		value += pattern.Min
 		if err != nil {
 			return nil, err
@@ -49,8 +75,33 @@ func Parse(data []byte) (HierarchyId, error) {
 	return levels, nil
 }
 
-// DecodeValue a string representation of the hierarchyid data type for a pattern
-func DecodeValue(pattern string, bin string) (int64, error) {
+// Encode a hierarchyid from list of positions in the hierarchy.
+func Encode(levels HierarchyId) ([]byte, error) {
+	var bin string = ""
+
+	for _, level := range levels {
+
+		// Find pattern that fits the binary data
+		var pattern *HierarchyIdPattern = nil
+		for i := 0; i < len(Patterns); i++ {
+			if Patterns[i].Min <= level && Patterns[i].Max >= level {
+				pattern = &Patterns[i]
+				break
+			}
+		}
+
+		if pattern == nil {
+			return nil, errors.New("No pattern found for " + strconv.FormatInt(level, 10))
+		}
+
+		// TODO <ADD CODE HERE>
+	}
+
+	return []byte(bin), nil
+}
+
+// Decode values a string representation of the hierarchyid data type for a pattern
+func decodeValue(pattern string, bin string) (int64, error) {
 	var binValue string = ""
 
 	for i := 0; i < len(pattern); i++ {
@@ -71,7 +122,7 @@ func DecodeValue(pattern string, bin string) (int64, error) {
 // Test pattern for binary data
 //
 // Return the pattern that fits the binary data (if any), the length of the pattern and an error.
-func TestPatterns(bin string) (*HierarchyIdPattern, error) {
+func testPatterns(bin string) (*HierarchyIdPattern, error) {
 	if len(bin) == 0 {
 		return nil, errors.New("Binary string is empty")
 	}
@@ -122,7 +173,7 @@ func TestPatterns(bin string) (*HierarchyIdPattern, error) {
 }
 
 // Receives a byte array and prints as binary (0 and 1) data.
-func BinaryString(data []byte) string {
+func binaryString(data []byte) string {
 	var str = ""
 
 	// Convert each byte to binary
@@ -146,30 +197,4 @@ func BinaryString(data []byte) string {
 	}
 
 	return str
-}
-
-// Create a string representation of the hierarchyid data type
-//
-// The string representation is a series of integers separated by slashes.  For example, \1\2\3\
-func ToString(data HierarchyId) string {
-	var result string = "/"
-	for _, level := range data {
-		result += strconv.FormatInt(level, 10) + "/"
-	}
-	return result
-}
-
-// Compare two hierarchyid data types
-//
-// The comparison is done by comparing each level of the hierarchyid.  If the levels are the same, the next level is compared.  If the levels are different, the comparison stops and the result is returned.
-func Compare(a HierarchyId, b HierarchyId) int {
-	for i := 0; i < len(a) && i < len(b); i++ {
-		if a[i] < b[i] {
-			return -1
-		} else if a[i] > b[i] {
-			return 1
-		}
-	}
-
-	return 0
 }
