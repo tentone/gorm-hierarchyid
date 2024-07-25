@@ -105,7 +105,7 @@ type TestData struct {
 	input  string
 }
 
-var TestParseData []TestData = []TestData{
+var TestEncodeDecodeData []TestData = []TestData{
 	{nil, ""},
 	{[]int64{-73}, "1BEEFC"},
 	{[]int64{-72}, "2088"},
@@ -190,7 +190,7 @@ var TestParseData []TestData = []TestData{
 }
 
 func TestParse(t *testing.T) {
-	for _, d := range TestParseData {
+	for _, d := range TestEncodeDecodeData {
 		input, err := hex.DecodeString(d.input)
 		if err != nil {
 			t.Errorf("Error decoding %v: %v", d.input, err)
@@ -206,3 +206,19 @@ func TestParse(t *testing.T) {
 		}
 	}
 }
+
+// func TestEncode(t *testing.T) {
+// 	for _, d := range TestEncodeDecodeData {
+
+// 		result, err := Encode(d.output)
+// 		if err != nil {
+// 			t.Errorf("Error parsing %v: %v", d.input, err)
+// 		}
+
+// 		encoded := hex.EncodeToString(result)
+
+// 		if encoded != d.input {
+// 			t.Errorf("Expected %v to return %v, got %v", d.output, d.input, encoded)
+// 		}
+// 	}
+// }

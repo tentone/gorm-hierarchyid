@@ -94,10 +94,42 @@ func Encode(levels HierarchyId) ([]byte, error) {
 			return nil, errors.New("No pattern found for " + strconv.FormatInt(level, 10))
 		}
 
-		// TODO <ADD CODE HERE>
+		// Convert value to binary
+		var binLevel = strconv.FormatInt(level, 2)
+
+		// Convert binary to string
+		var result = ""
+
+		for i := 0; i < len(pattern.Pattern); i++ {
+			var pChar = pattern.Pattern[i]
+			if pChar == 'x' {
+				if len(binLevel) > 0 {
+					result += string(binLevel[0])
+					binLevel = binLevel[1:]
+				} else {
+					result += "0"
+				}
+			} else {
+				result += string(pChar)
+			}
+		}
+
+		bin += result
 	}
 
-	return []byte(bin), nil
+	// Convert binary string to byte array
+	var binLen = len(bin)
+	var binBytes = make([]byte, (binLen+7)/8)
+	for i := 0; i < binLen; i++ {
+		if bin[i] == '1' {
+			// Set the bit in the byte array
+			var byteIndex = i / 8
+			var bitIndex = i % 8
+			binBytes[byteIndex] |= 1 << uint(7-bitIndex)
+		}
+	}
+
+	return binBytes, nil
 }
 
 // Decode values a string representation of the hierarchyid data type for a pattern
