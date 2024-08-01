@@ -63,7 +63,7 @@ func (j *HierarchyIdDb) Scan(src any) error {
 	switch src := src.(type) {
 	case []byte:
 		var err error
-		j.Data, err = Parse(src)
+		j.Data, err = Decode(src)
 		if err != nil {
 			return err
 		}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -36,10 +37,10 @@ func Compare(a HierarchyId, b HierarchyId) int {
 	return 0
 }
 
-// Parse takes a byte slice of data stored in SQL Server hierarchyid format and returns a HierarchyId.
+// Decode takes a byte slice of data stored in SQL Server hierarchyid format and returns a HierarchyId.
 //
 // SQL server uses a custom binary format for hierarchyid.
-func Parse(data []byte) (HierarchyId, error) {
+func Decode(data []byte) (HierarchyId, error) {
 	var levels []int64 = []int64{}
 	if len(data) == 0 {
 		return levels, nil
@@ -75,7 +76,7 @@ func Parse(data []byte) (HierarchyId, error) {
 	return levels, nil
 }
 
-// Encode a hierarchyid from list of positions in the hierarchy.
+// Encode a hierarchyid from hierarchyid.
 func Encode(levels HierarchyId) ([]byte, error) {
 	var bin string = ""
 
@@ -94,8 +95,21 @@ func Encode(levels HierarchyId) ([]byte, error) {
 			return nil, errors.New("No pattern found for " + strconv.FormatInt(level, 10))
 		}
 
+		// Count the number of bits in the pattern
+		var bitCount = 0
+		for _, c := range pattern.Pattern {
+			if c == 'x' {
+				bitCount++
+			}
+		}
+
 		// Convert value to binary
 		var binLevel = strconv.FormatInt(level, 2)
+		for len(binLevel) < bitCount {
+			binLevel = "0" + binLevel
+		}
+
+		fmt.Println("Found pattern", pattern.Pattern, "for", level, "binary", binLevel)
 
 		// Convert binary to string
 		var result = ""
@@ -106,13 +120,15 @@ func Encode(levels HierarchyId) ([]byte, error) {
 				if len(binLevel) > 0 {
 					result += string(binLevel[0])
 					binLevel = binLevel[1:]
-				} else {
-					result += "0"
 				}
+			} else if pChar == 'T' {
+				result += "1"
 			} else {
 				result += string(pChar)
 			}
 		}
+
+		fmt.Println("Found pattern", pattern.Pattern, "for", level, "binary", binLevel, "result", result)
 
 		bin += result
 	}
