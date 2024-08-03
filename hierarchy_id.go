@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 )
 
@@ -104,12 +103,12 @@ func Encode(levels HierarchyId) ([]byte, error) {
 		}
 
 		// Convert value to binary
-		var binLevel = strconv.FormatInt(level, 2)
+		var binLevel = strconv.FormatInt(level-pattern.Min, 2)
 		for len(binLevel) < bitCount {
 			binLevel = "0" + binLevel
 		}
 
-		fmt.Println("Found pattern", pattern.Pattern, "for", level, "binary", binLevel)
+		// fmt.Println("Found pattern", pattern.Pattern, "for", level, "binary", binLevel)
 
 		// Convert binary to string
 		var result = ""
@@ -128,7 +127,7 @@ func Encode(levels HierarchyId) ([]byte, error) {
 			}
 		}
 
-		fmt.Println("Found pattern", pattern.Pattern, "for", level, "binary", binLevel, "result", result)
+		// fmt.Println("Found pattern", pattern.Pattern, "for", level, "binary", binLevel, "result", result)
 
 		bin += result
 	}
