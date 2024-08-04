@@ -17,7 +17,7 @@ func TestCreateRead(t *testing.T) {
 
 	type TestCreateReadTable struct {
 		gorm.Model
-		Path HierarchyIdDb
+		Path HierarchyId
 	}
 
 	_ = db.Migrator().DropTable(&TestCreateReadTable{})
@@ -27,7 +27,7 @@ func TestCreateRead(t *testing.T) {
 		t.Fatal("Failed to migrate table", err)
 	}
 
-	new := &TestCreateReadTable{Path: HierarchyIdDb{Data: []int64{1, 2, 3, 4}}}
+	new := &TestCreateReadTable{Path: HierarchyId{Data: []int64{1, 2, 3, 4}}}
 	conn := db.Create(new)
 	if conn.Error != nil {
 		t.Fatal("Failed to create entry", new.Path.Data, err)
@@ -53,7 +53,7 @@ func TestUniqueNil(t *testing.T) {
 
 	type TestUniqueTable struct {
 		gorm.Model
-		Path HierarchyIdDb `gorm:"unique;not null;"`
+		Path HierarchyId `gorm:"unique;not null;"`
 	}
 
 	_ = db.Migrator().DropTable(&TestUniqueTable{})
@@ -63,7 +63,7 @@ func TestUniqueNil(t *testing.T) {
 		t.Fatal("Failed to migrate table", err)
 	}
 
-	new := &TestUniqueTable{Path: HierarchyIdDb{Data: []int64{1, 2, 3, 4}}}
+	new := &TestUniqueTable{Path: HierarchyId{Data: []int64{1, 2, 3, 4}}}
 	conn := db.Create(new)
 	if conn.Error != nil {
 		t.Fatal("Failed to create entry", new.Path.Data, err)
@@ -74,7 +74,7 @@ func TestUniqueNil(t *testing.T) {
 		t.Fatal("Should not be able to create duplicated entry", new.Path.Data, err)
 	}
 
-	conn = db.Create(&TestUniqueTable{Path: HierarchyIdDb{Data: nil}})
+	conn = db.Create(&TestUniqueTable{Path: HierarchyId{Data: nil}})
 	if conn.Error == nil {
 		t.Fatal("Should not be able to create null entry", new.Path.Data, err)
 	}

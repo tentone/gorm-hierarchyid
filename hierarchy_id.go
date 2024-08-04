@@ -6,15 +6,15 @@ import (
 	"strings"
 )
 
-// HierarchyId is a type to represent a hierarchyid data type from SQL Server
+// HierarchyIdData is a type to represent a hierarchyid data type from SQL Server
 //
 // The hierarchyid data type is a series of integers separated by slashes.  For example, \1\2\3\.
-type HierarchyId = []int64
+type HierarchyIdData = []int64
 
 // Create a string representation of the hierarchyid data type
 //
 // The string representation is a series of integers separated by slashes.  For example, \1\2\3\
-func ToString(data HierarchyId) string {
+func ToString(data HierarchyIdData) string {
 	var r string = "/"
 	for _, level := range data {
 		r += strconv.FormatInt(level, 10) + "/"
@@ -22,8 +22,20 @@ func ToString(data HierarchyId) string {
 	return r
 }
 
+// Get all parents of a hierarchyid.
+func GetParents(data HierarchyIdData) []HierarchyIdData {
+	var parents []HierarchyIdData = []HierarchyIdData{}
+
+	for i := 0; i < len(data)-1; i++ {
+		var parent = data[0 : i+1]
+		parents = append(parents, parent)
+	}
+
+	return parents
+}
+
 // Create a hierarchyid data type from a string representation
-func FromString(data string) (HierarchyId, error) {
+func FromString(data string) (HierarchyIdData, error) {
 	var levels []int64 = []int64{}
 	if data == "" {
 		return levels, nil
@@ -50,7 +62,7 @@ func FromString(data string) (HierarchyId, error) {
 // Compare two hierarchyid data types
 //
 // The comparison is done by comparing each level of the hierarchyid.  If the levels are the same, the next level is compared.  If the levels are different, the comparison stops and the result is returned.
-func Compare(a HierarchyId, b HierarchyId) int {
+func Compare(a HierarchyIdData, b HierarchyIdData) int {
 	for i := 0; i < len(a) && i < len(b); i++ {
 		if a[i] < b[i] {
 			return -1
@@ -65,7 +77,7 @@ func Compare(a HierarchyId, b HierarchyId) int {
 // Decode takes a byte slice of data stored in SQL Server hierarchyid format and returns a HierarchyId.
 //
 // SQL server uses a custom binary format for hierarchyid.
-func Decode(data []byte) (HierarchyId, error) {
+func Decode(data []byte) (HierarchyIdData, error) {
 	var levels []int64 = []int64{}
 	if len(data) == 0 {
 		return levels, nil
@@ -102,7 +114,7 @@ func Decode(data []byte) (HierarchyId, error) {
 }
 
 // Encode a hierarchyid from hierarchyid.
-func Encode(levels HierarchyId) ([]byte, error) {
+func Encode(levels HierarchyIdData) ([]byte, error) {
 	var bin string = ""
 
 	for _, level := range levels {

@@ -10,18 +10,18 @@ import (
 )
 
 // HierarchyId is a structure to represent database hierarchy ids.
-type HierarchyIdDb struct {
+type HierarchyId struct {
 	// Path of the hierarchy (e.g "/1/2/3/4/")
-	Data HierarchyId
+	Data HierarchyIdData
 }
 
 // GormDataTypeInterface to specify the nema of data type.
-func (HierarchyIdDb) GormDataType() string {
+func (HierarchyId) GormDataType() string {
 	return "hierarchyid"
 }
 
 // GormDBDataTypeInterface defines the data type to apply in the database.
-func (HierarchyIdDb) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+func (HierarchyId) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	if db.Dialector.Name() != "sqlserver" {
 		panic("hierarchyid is only supported on SQL Server")
 	}
@@ -29,13 +29,25 @@ func (HierarchyIdDb) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	return "hierarchyid"
 }
 
+// Get all parents of a hierarchyid.
+func (j *HierarchyId) GetParents() []HierarchyId {
+	p := []HierarchyId{}
+	pd := GetParents(j.Data)
+
+	for _, d := range pd {
+		p = append(p, HierarchyId{Data: d})
+	}
+
+	return p
+}
+
 // When marshaling to JSON, we want the field formatted as a string.
-func (j HierarchyIdDb) MarshalJSON() ([]byte, error) {
+func (j HierarchyId) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ToString(j.Data))
 }
 
 // When unmarshaling from JSON, we want to parse the string into the field.
-func (j *HierarchyIdDb) UnmarshalJSON(data []byte) error {
+func (j *HierarchyId) UnmarshalJSON(data []byte) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -58,7 +70,7 @@ func (j *HierarchyIdDb) UnmarshalJSON(data []byte) error {
 // Value implements the driver.Valuer interface.
 //
 // Used to provide a value to the SQL server for storage.
-func (j HierarchyIdDb) Value() (driver.Value, error) {
+func (j HierarchyId) Value() (driver.Value, error) {
 	if j.Data == nil {
 		return nil, nil
 	}
@@ -74,7 +86,7 @@ func (j HierarchyIdDb) Value() (driver.Value, error) {
 // Scan implements the sql.Scanner interface.
 //
 // Used to read the value provided by the SQL server.
-func (j *HierarchyIdDb) Scan(src any) error {
+func (j *HierarchyId) Scan(src any) error {
 	if src == nil {
 		j.Data = nil
 		return nil

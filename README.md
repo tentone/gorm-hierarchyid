@@ -33,6 +33,11 @@
 
 ## Usage
 
+### Get parents
+ - To get all parents of a node use the `GetParents` method.
+  ```go
+  parents, err := hierarchyid.GetParents(db, node)
+  ```
 
 
 
