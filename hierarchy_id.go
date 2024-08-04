@@ -11,6 +11,23 @@ import (
 // The hierarchyid data type is a series of integers separated by slashes.  For example, \1\2\3\.
 type HierarchyIdData = []int64
 
+// Check if a hierarchyid is a descendant of another hierarchyid
+func IsDescendantOf(child HierarchyIdData, parent HierarchyIdData) bool {
+	// If the path to the parent if bigger return false
+	if len(child) <= len(parent) {
+		return false
+	}
+
+	// Check if all levels of the parent are the same as the descendent
+	for i := 0; i < len(parent); i++ {
+		if child[i] != parent[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Create a string representation of the hierarchyid data type
 //
 // The string representation is a series of integers separated by slashes.  For example, \1\2\3\

@@ -29,6 +29,11 @@ func (HierarchyId) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	return "hierarchyid"
 }
 
+// Check if a hierarchyid is a descendant of another hierarchyid
+func (j *HierarchyId) IsDescendantOf(parent HierarchyId) bool {
+	return IsDescendantOf(j.Data, parent.Data)
+}
+
 // Get all parents of a hierarchyid.
 func (j *HierarchyId) GetParents() []HierarchyId {
 	p := []HierarchyId{}

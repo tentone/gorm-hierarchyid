@@ -32,11 +32,19 @@
     ```
 
 ## Usage
+### Create
+ - Elements can be added to the tree as regular entries
+ - Just make sure that the tree indexes are filled correctly, indexes dont need to be sequential.
+  ```go
+  db.Create(&Table{Path: HierarchyID{1}})
+  db.Create(&Table{Path: HierarchyID{1, 1}})
+  db.Create(&Table{Path: HierarchyID{1, 1, 2}})
+  ```
 
-### Get parents
+### Get Parents
  - To get all parents of a node use the `GetParents` method.
   ```go
-  parents, err := hierarchyid.GetParents(db, node)
+  db.Model(&Table{}).Where("[path] IN (?)", child.Path.GetParents()).Find(&parents)
   ```
 
 
