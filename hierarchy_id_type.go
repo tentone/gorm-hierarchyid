@@ -31,16 +31,23 @@ func (HierarchyIdDb) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 
 // When marshaling to JSON, we want the field formatted as a string.
 func (j HierarchyIdDb) MarshalJSON() ([]byte, error) {
-	return json.Marshal(j.Data)
+	return json.Marshal(ToString(j.Data))
 }
 
 // When unmarshaling from JSON, we want to parse the string into the field.
 func (j *HierarchyIdDb) UnmarshalJSON(data []byte) error {
-	if len(data) == 0 || string(data) == "null" {
+	if len(data) == 0 {
 		return nil
 	}
 
-	var err = json.Unmarshal(data, &j.Data)
+	str := ""
+
+	err := json.Unmarshal(data, &str)
+	if err != nil {
+		return err
+	}
+
+	j.Data, err = FromString(str)
 	if err != nil {
 		return err
 	}

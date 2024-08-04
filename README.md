@@ -4,7 +4,11 @@
    - Type wrapper for usage with gorm ORM.
  - The [hierarchyid](https://learn.microsoft.com/en-us/sql/relational-databases/hierarchical-data-sql-server?view=sql-server-ver16) is data to represent a position in a hierarchy in SQL Server.
    - It is a variable length type with reduced storage requirements.
-
+ - Encodes the position in the hierarchy as a list of indexes
+   - For example in the tree below the path to `E` is `/1/1/2/`
+   - Indexes can be used to sort elements inside of a tree level.
+ 
+<img src="./readme/tree.png" width="600"/>
 
 ## How it works
  - The `HierarchyID` is defined as a `[]int64` in go.
@@ -18,12 +22,19 @@
 ## Model definition
  - Declare `HierarchyID` type in your gorm model, there is no need to specify the DB data type.
  - Is is recommended to also mark the field as `unique` to avoid duplicates.
+ - The library will handle the serialization and deserialization of the field to match the SQL Server `hierarchyid` type.
     ```go
     type Model struct {
         gorm.Model
-        ParentID HierarchyID `gorm:"unique"`
+
+        Path HierarchyID `gorm:"unique;not null;"`
     }
     ```
+
+## Usage
+
+
+
 
 ## Resources
  - [adamil.net - How the SQL Server hierarchyid data type works (kind of)](http://www.adammil.net/blog/v100_how_the_SQL_Server_hierarchyid_data_type_works_kind_of_.html)

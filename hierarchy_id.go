@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"strconv"
+	"strings"
 )
 
 // HierarchyId is a type to represent a hierarchyid data type from SQL Server
@@ -19,6 +20,31 @@ func ToString(data HierarchyId) string {
 		r += strconv.FormatInt(level, 10) + "/"
 	}
 	return r
+}
+
+// Create a hierarchyid data type from a string representation
+func FromString(data string) (HierarchyId, error) {
+	var levels []int64 = []int64{}
+	if data == "" {
+		return levels, nil
+	}
+
+	// Split the string into levels
+	var parts = strings.Split(data, "/")
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+
+		var level, err = strconv.ParseInt(part, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		levels = append(levels, level)
+	}
+
+	return levels, nil
 }
 
 // Compare two hierarchyid data types
