@@ -1,42 +1,81 @@
 package main
 
 import (
+	"slices"
 	"testing"
 
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 )
 
-type TestTable struct {
-	gorm.Model
-
-	Path HierarchyIdDb
-}
-
-func TestGorm(t *testing.T) {
-	dsn := "sqlserver://sa:12345678@localhost:9930?database=gorm"
+func TestCreateRead(t *testing.T) {
+	dsn := "sqlserver://sa:12345678@localhost:1433?database=test"
 	db, err := gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		t.Fatal("Failed to connect database", err)
 	}
 
-	err = db.AutoMigrate(&TestTable{})
+	type TestCreateReadTable struct {
+		gorm.Model
+		Path HierarchyIdDb
+	}
+
+	_ = db.Migrator().DropTable(&TestCreateReadTable{})
+
+	err = db.AutoMigrate(&TestCreateReadTable{})
 	if err != nil {
-		panic("failed to migrate")
+		t.Fatal("Failed to migrate table", err)
 	}
 
-	conn := db.Create(&TestTable{Path: HierarchyIdDb{Data: []int64{1, 2, 3, 4}}})
+	new := &TestCreateReadTable{Path: HierarchyIdDb{Data: []int64{1, 2, 3, 4}}}
+	conn := db.Create(new)
 	if conn.Error != nil {
-		panic("failed to create")
+		t.Fatal("Failed to create entry", new.Path.Data, err)
 	}
 
-	hid := TestTable{}
-	conn = db.First(&TestTable{})
+	hid := TestCreateReadTable{}
+	conn = db.First(&TestCreateReadTable{})
 	if conn.Error != nil {
-		panic("failed to query")
+		t.Fatal("Failed to query database", conn.Error)
 	}
 
-	if hid.Path.Data[0] != 1 && hid.Path.Data[1] != 2 && hid.Path.Data[2] != 3 && hid.Path.Data[3] != 4 {
-		panic("failed to read")
+	if slices.Compare([]int64{1, 2, 3, 4}, hid.Path.Data) == 0 {
+		t.Fatal("Values read are not correct", hid.Path.Data)
+	}
+}
+
+func TestUniqueNil(t *testing.T) {
+	dsn := "sqlserver://sa:12345678@localhost:1433?database=test"
+	db, err := gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
+	if err != nil {
+		t.Fatal("Failed to connect database", err)
+	}
+
+	type TestUniqueTable struct {
+		gorm.Model
+		Path HierarchyIdDb `gorm:"unique;not null;"`
+	}
+
+	_ = db.Migrator().DropTable(&TestUniqueTable{})
+
+	err = db.AutoMigrate(&TestUniqueTable{})
+	if err != nil {
+		t.Fatal("Failed to migrate table", err)
+	}
+
+	new := &TestUniqueTable{Path: HierarchyIdDb{Data: []int64{1, 2, 3, 4}}}
+	conn := db.Create(new)
+	if conn.Error != nil {
+		t.Fatal("Failed to create entry", new.Path.Data, err)
+	}
+
+	conn = db.Create(new)
+	if conn.Error == nil {
+		t.Fatal("Should not be able to create duplicated entry", new.Path.Data, err)
+	}
+
+	conn = db.Create(&TestUniqueTable{Path: HierarchyIdDb{Data: nil}})
+	if conn.Error == nil {
+		t.Fatal("Should not be able to create null entry", new.Path.Data, err)
 	}
 }

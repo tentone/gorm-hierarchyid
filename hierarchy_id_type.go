@@ -15,13 +15,17 @@ type HierarchyIdDb struct {
 	Data HierarchyId
 }
 
-// GormDataType gorm common data type
+// GormDataTypeInterface to specify the nema of data type.
 func (HierarchyIdDb) GormDataType() string {
 	return "hierarchyid"
 }
 
-// GormDBDataType gorm db data type
+// GormDBDataTypeInterface defines the data type to apply in the database.
 func (HierarchyIdDb) GormDBDataType(db *gorm.DB, field *schema.Field) string {
+	if db.Dialector.Name() != "sqlserver" {
+		panic("hierarchyid is only supported on SQL Server")
+	}
+
 	return "hierarchyid"
 }
 
@@ -48,7 +52,16 @@ func (j *HierarchyIdDb) UnmarshalJSON(data []byte) error {
 //
 // Used to provide a value to the SQL server for storage.
 func (j HierarchyIdDb) Value() (driver.Value, error) {
-	return j.Data, nil
+	if j.Data == nil {
+		return nil, nil
+	}
+
+	data, err := Encode(j.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 // Scan implements the sql.Scanner interface.

@@ -108,8 +108,6 @@ func Encode(levels HierarchyId) ([]byte, error) {
 			binLevel = "0" + binLevel
 		}
 
-		// fmt.Println("Found pattern", pattern.Pattern, "for", level, "binary", binLevel)
-
 		// Convert binary to string
 		var result = ""
 
@@ -126,8 +124,6 @@ func Encode(levels HierarchyId) ([]byte, error) {
 				result += string(pChar)
 			}
 		}
-
-		// fmt.Println("Found pattern", pattern.Pattern, "for", level, "binary", binLevel, "result", result)
 
 		bin += result
 	}
