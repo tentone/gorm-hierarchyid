@@ -89,7 +89,7 @@ func TestParents(t *testing.T) {
 
 	type TestParentsTable struct {
 		gorm.Model
-		Path HierarchyId `gorm:"unique;not null;"`
+		Path HierarchyId `gorm:"unique;not null;type:hierarchyid;"`
 	}
 
 	_ = db.Migrator().DropTable(&TestParentsTable{})
@@ -110,14 +110,14 @@ func TestParents(t *testing.T) {
 	_ = db.Create(&TestParentsTable{Path: HierarchyId{Data: []int64{3}}})
 
 	var count int64 = 0
-	_ = db.Model(&TestParentsTable{}).Where("[path] IN (?)", child.Path.GetParents()).Count(&count)
+	_ = db.Model(&TestParentsTable{}).Where("[path] IN (?)", child.Path.GetAncestors()).Count(&count)
 
 	if count != 3 {
 		t.Fatal("Expected 3 parents, got", count)
 	}
 }
 
-func TestTreeBuild(t *testing.T) {
+func TestGetTreeLevelSearch(t *testing.T) {
 	dsn := "sqlserver://sa:12345678@localhost:1433?database=test"
 	db, err := gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -129,9 +129,6 @@ func TestTreeBuild(t *testing.T) {
 
 		Path HierarchyId `gorm:"unique;not null;"`
 
-		ParentID uint              `gorm:"index"`
-		Parent   *TestParentsTable `foreignKey:"parent_id;references:id;constraint:OnUpdate:NO ACTION,OnDelete:CASCADE;"`
-
 		Name string `gorm:"not null;"`
 	}
 
@@ -142,12 +139,41 @@ func TestTreeBuild(t *testing.T) {
 		t.Fatal("Failed to migrate table", err)
 	}
 
-	_ = db.Create(&TestParentsTable{Name: "a", Path: HierarchyId{Data: []int64{1, 2, 3, 4}}})
+	_ = db.Create(&TestParentsTable{Name: "ade", Path: HierarchyId{Data: []int64{1, 2, 3, 4}}})
 	_ = db.Create(&TestParentsTable{Name: "a", Path: HierarchyId{Data: []int64{1, 2, 3}}})
 	_ = db.Create(&TestParentsTable{Name: "a", Path: HierarchyId{Data: []int64{1, 2}}})
 	_ = db.Create(&TestParentsTable{Name: "a", Path: HierarchyId{Data: []int64{1}}})
-	_ = db.Create(&TestParentsTable{Name: "a", Path: HierarchyId{Data: []int64{2}}})
-	_ = db.Create(&TestParentsTable{Name: "a", Path: HierarchyId{Data: []int64{2, 1}}})
-	_ = db.Create(&TestParentsTable{Name: "a", Path: HierarchyId{Data: []int64{3}}})
+	_ = db.Create(&TestParentsTable{Name: "b", Path: HierarchyId{Data: []int64{2}}})
+	_ = db.Create(&TestParentsTable{Name: "b", Path: HierarchyId{Data: []int64{2, 1}}})
+	_ = db.Create(&TestParentsTable{Name: "c", Path: HierarchyId{Data: []int64{3}}})
+	_ = db.Create(&TestParentsTable{Name: "c", Path: HierarchyId{Data: []int64{3, 1}}})
+	_ = db.Create(&TestParentsTable{Name: "cde", Path: HierarchyId{Data: []int64{3, 1, 1}}})
 
+	elements := []TestParentsTable{}
+
+	// Get all elements that are descendants of '/1/2/'
+	conn := db.Where("[path].IsDescendantOf(?)=1", HierarchyId{Data: []int64{1, 2}}).Find(&elements)
+	if conn.Error != nil {
+		t.Fatal("Failed to query database", conn.Error)
+	}
+
+	if len(elements) != 3 {
+		t.Fatal("Expected 3 elements, got", len(elements))
+	}
+
+	// Get all elements on the root that have a child with name that contains 'de'
+	root := GetRoot()
+
+	sub := db.Table("test_parents_tables AS b").Select("COUNT(*)").Where("[b].[path].IsDescendantOf([a].[path])=1 AND [b].[name] LIKE '%de%'")
+
+	conn = db.Table("test_parents_tables AS a").
+		Where("[a].[path].GetLevel()=? AND [a].[path].IsDescendantOf(?)=1 AND (?)>0", root.GetLevel()+1, root, sub).
+		Find(&elements)
+	if conn.Error != nil {
+		t.Fatal("Failed to query database", conn.Error)
+	}
+
+	if len(elements) != 2 {
+		t.Fatal("Expected 2 elements, got", len(elements))
+	}
 }

@@ -29,15 +29,47 @@ func (HierarchyId) GormDBDataType(db *gorm.DB, field *schema.Field) string {
 	return "hierarchyid"
 }
 
+// Get the tree level where this hierarchyid is located.
+//
+// '/1/2/3/4/' is at level 4, '/1/2/3/' is at level 3, etc.
+func (j *HierarchyId) GetLevel() int {
+	return len(j.Data)
+}
+
+// Get the root of the tree '\'.
+//
+// The root is the hierarchyid with an empty path.
+func GetRoot() HierarchyId {
+	return HierarchyId{Data: []int64{}}
+}
+
 // Check if a hierarchyid is a descendant of another hierarchyid
 func (j *HierarchyId) IsDescendantOf(parent HierarchyId) bool {
 	return IsDescendantOf(j.Data, parent.Data)
 }
 
-// Get all parents of a hierarchyid.
-func (j *HierarchyId) GetParents() []HierarchyId {
+// Calculate a new  hierarchyid when moving from a parent to another parent in the tree.
+//
+// The position will be calculated based on the old and new parents.
+//
+// E.g. if the element is on position '/1/2/57/8/' old parents is '/1/2/' and new parent is '/1/3/' the new position will be '/1/3/57/8/'
+func (j *HierarchyId) GetReparentedValue(oldAncestor HierarchyId, newAncestor HierarchyId) HierarchyId {
+	if !j.IsDescendantOf(oldAncestor) {
+		return HierarchyId{}
+	}
+
+	path := j.Data
+	path = append(newAncestor.Data, path[len(oldAncestor.Data):]...)
+
+	return HierarchyId{Data: path}
+}
+
+// Get all ancestors of a hierarchyid.
+//
+// E.g. '/1/2/3/4/' will return ['/1/', '/1/2/', '/1/2/3/']
+func (j *HierarchyId) GetAncestors() []HierarchyId {
 	p := []HierarchyId{}
-	pd := GetParents(j.Data)
+	pd := GetAncestors(j.Data)
 
 	for _, d := range pd {
 		p = append(p, HierarchyId{Data: d})
@@ -46,9 +78,14 @@ func (j *HierarchyId) GetParents() []HierarchyId {
 	return p
 }
 
+// Create a string representation of the hierarchyid data type
+func (j *HierarchyId) ToString() string {
+	return ToString(j.Data)
+}
+
 // Get the direct parent of a hierarchyid.
-func (j *HierarchyId) GetParent() HierarchyId {
-	return HierarchyId{Data: GetParent(j.Data)}
+func (j *HierarchyId) GetAncestor() HierarchyId {
+	return HierarchyId{Data: GetAncestor(j.Data)}
 }
 
 // When marshaling to JSON, we want the field formatted as a string.

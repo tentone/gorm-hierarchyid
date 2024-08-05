@@ -39,8 +39,8 @@ func ToString(data HierarchyIdData) string {
 	return r
 }
 
-// Get all parents of a hierarchyid.
-func GetParents(data HierarchyIdData) []HierarchyIdData {
+// Get all ancestors (parents) of a hierarchyid.
+func GetAncestors(data HierarchyIdData) []HierarchyIdData {
 	var parents []HierarchyIdData = []HierarchyIdData{}
 
 	for i := 0; i < len(data)-1; i++ {
@@ -51,8 +51,8 @@ func GetParents(data HierarchyIdData) []HierarchyIdData {
 	return parents
 }
 
-// Get the direct parent of a hierarchyid.
-func GetParent(data HierarchyIdData) HierarchyIdData {
+// Get the direct ancestor of a hierarchyid.
+func GetAncestor(data HierarchyIdData) HierarchyIdData {
 	if len(data) == 0 {
 		return []int64{}
 	}
@@ -141,6 +141,11 @@ func Decode(data []byte) (HierarchyIdData, error) {
 
 // Encode a hierarchyid from hierarchyid.
 func Encode(levels HierarchyIdData) ([]byte, error) {
+
+	if len(levels) == 0 {
+		return []byte{}, nil
+	}
+
 	var bin string = ""
 
 	for _, level := range levels {
