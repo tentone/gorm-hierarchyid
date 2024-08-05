@@ -46,6 +46,11 @@ func (j *HierarchyId) GetParents() []HierarchyId {
 	return p
 }
 
+// Get the direct parent of a hierarchyid.
+func (j *HierarchyId) GetParent() HierarchyId {
+	return HierarchyId{Data: GetParent(j.Data)}
+}
+
 // When marshaling to JSON, we want the field formatted as a string.
 func (j HierarchyId) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ToString(j.Data))

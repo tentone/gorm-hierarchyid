@@ -51,6 +51,15 @@ func GetParents(data HierarchyIdData) []HierarchyIdData {
 	return parents
 }
 
+// Get the direct parent of a hierarchyid.
+func GetParent(data HierarchyIdData) HierarchyIdData {
+	if len(data) == 0 {
+		return []int64{}
+	}
+
+	return data[0 : len(data)-1]
+}
+
 // Create a hierarchyid data type from a string representation
 func FromString(data string) (HierarchyIdData, error) {
 	var levels []int64 = []int64{}
