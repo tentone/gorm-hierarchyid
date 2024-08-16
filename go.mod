@@ -1,4 +1,4 @@
-module github.com/tentone/gorm-hierarchyid
+module github.com/tentone/hierarchyid
 
 go 1.22.2
 
