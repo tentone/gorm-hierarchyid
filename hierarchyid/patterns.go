@@ -1,4 +1,4 @@
-package main
+package hierarchyid
 
 // Represents a possible pattern for hierarchyid values.
 //

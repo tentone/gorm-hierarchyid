@@ -19,6 +19,13 @@
    - Elements placed in the root should not use an empty list.
    - They should instead by represented by `/1/`, `/2/`, etc.
 
+## Installation
+ - The library can be installed using `go get`.
+ - 
+  ```bash
+  go get github.com/tentone/gorm-hierarchyid
+  ```
+
 ## Model definition
  - Declare `HierarchyID` type in your gorm model, there is no need to specify the DB data type.
  - Is is recommended to also mark the field as `unique` to avoid duplicates.
