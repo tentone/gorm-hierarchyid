@@ -43,6 +43,13 @@ func GetRoot() HierarchyId {
 	return HierarchyId{Data: []int64{}}
 }
 
+// Create a new hierarchyid from a string.
+func (j *HierarchyId) FromString(data string) error {
+	var err error
+	j.Data, err = FromString(data)
+	return err
+}
+
 // Check if a hierarchyid is a descendant of another hierarchyid
 func (j *HierarchyId) IsDescendantOf(parent HierarchyId) bool {
 	return IsDescendantOf(j.Data, parent.Data)

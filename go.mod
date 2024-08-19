@@ -1,6 +1,6 @@
 module github.com/tentone/hierarchyid
 
-go 1.22.2
+go 1.20
 
 require (
 	gorm.io/driver/sqlserver v1.5.3
