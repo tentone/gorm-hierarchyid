@@ -23,7 +23,7 @@
  - The library can be installed using `go get`.
  - 
   ```bash
-  go get github.com/tentone/gorm-hierarchyid
+  go get github.com/tentone/hierarchyid
   ```
 
 ## Model definition
@@ -34,7 +34,7 @@
     type Model struct {
         gorm.Model
 
-        Path HierarchyID `gorm:"unique;not null;"`
+        Path hierarchyid.HierarchyID `gorm:"unique;not null;"`
     }
     ```
  - In some scenarios it might be usefull to also keep a tradicional relationship to the parent.
@@ -45,7 +45,7 @@
     type Model struct {
       gorm.Model
 
-      Path HierarchyId `gorm:"unique;not null;"`
+      Path hierarchyid.HierarchyId `gorm:"unique;not null;"`
 
       ParentID uint              `gorm:"index"`
       Parent   *TestParentsTable `foreignKey:"parent_id;references:id;constraint:OnUpdate:NO ACTION,OnDelete:CASCADE;"`
@@ -58,9 +58,9 @@
  - Elements can be added to the tree as regular entries
  - Just make sure that the tree indexes are filled correctly, indexes dont need to be sequential.
   ```go
-  db.Create(&Table{Path: HierarchyID{Data: []int64{1}}})
-  db.Create(&Table{Path: HierarchyID{Data: []int64{1, 1}}})
-  db.Create(&Table{Path: HierarchyID{Data: []int64{1, 1, 2}}})
+  db.Create(&Table{Path: hierarchyid.HierarchyID{Data: []int64{1}}})
+  db.Create(&Table{Path: hierarchyid.HierarchyID{Data: []int64{1, 1}}})
+  db.Create(&Table{Path: hierarchyid.HierarchyID{Data: []int64{1, 1, 2}}})
   ```
 
 ### Get Ancestors
@@ -80,7 +80,7 @@
  - Example on getting all children of a node (including the node itself).
   ```go
   elements := []Table{}
-  db.Where("[path].IsDescendantOf(?)=1", HierarchyId{Data: []int64{1, 2}}).Find(&elements)
+  db.Where("[path].IsDescendantOf(?)=1", hierarchyid.HierarchyId{Data: []int64{1, 2}}).Find(&elements)
   ```
  - It is also possible to filter the children based on sub-levels.
  - Example on getting all nodes from root where at least one of the sub-level has a name that contains the text 'de'
@@ -94,7 +94,7 @@
  - A more generic version of the same code presented above writen in go.
 
   ```go
-  root := GetRoot()
+  root := hierarchyid.GetRoot()
   subQuery := db.Table("table AS b").Select("COUNT(*)").Where("[b].[path].IsDescendantOf([a].[path])=1 AND [b].[name] LIKE '%de%'")
   conn = db.Table("table AS a").
     Where("[a].[path].GetLevel()=? AND [a].[path].IsDescendantOf(?)=1 AND (?)>0", root.GetLevel()+1, root, subQuery).
